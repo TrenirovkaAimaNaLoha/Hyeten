@@ -59,6 +59,7 @@ local function createTeleportUI()
     end
 
     ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "CustomMenu"
     Frame = Instance.new("Frame")
     PlayerList = Instance.new("ScrollingFrame")
     UIListLayout = Instance.new("UIListLayout")
