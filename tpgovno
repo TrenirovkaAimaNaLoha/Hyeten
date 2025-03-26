@@ -1,0 +1,197 @@
+-- This script teleports the player to other players on the server in Roblox.
+-- Place this script in a LocalScript inside StarterPlayerScripts or StarterCharacterScripts.
+
+local ScreenGui
+local Frame
+local PlayerList
+local UIListLayout
+
+-- Function to teleport to a target player
+local function teleportToPlayer(targetPlayer)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local targetCharacter = targetPlayer.Character
+
+    if character and targetCharacter then
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+
+        if humanoidRootPart and targetHumanoidRootPart then
+            humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame
+        end
+    end
+end
+
+-- Function to create a button for a player
+local function createPlayerButton(player)
+    local Button = Instance.new("TextButton")
+    Button.Parent = PlayerList
+    Button.Size = UDim2.new(1, -10, 0, 30)
+    Button.Text = player.Name
+    Button.BackgroundTransparency = 0.5
+
+    -- Teleport to player on button click
+    Button.MouseButton1Click:Connect(function()
+        teleportToPlayer(player)
+    end)
+
+    -- Add delete button
+    local DeleteButton = Instance.new("TextButton")
+    DeleteButton.Parent = Button
+    DeleteButton.Size = UDim2.new(0, 30, 1, 0)
+    DeleteButton.Position = UDim2.new(1, -35, 0, 0)
+    DeleteButton.Text = "X"
+    DeleteButton.BackgroundTransparency = 0.5
+
+    -- Remove player button on delete button click
+    DeleteButton.MouseButton1Click:Connect(function()
+        Button:Destroy()
+    end)
+end
+
+-- UI to select a player to teleport to
+local function createTeleportUI()
+    -- Check if the UI already exists
+    if ScreenGui then
+        return
+    end
+
+    ScreenGui = Instance.new("ScreenGui")
+    Frame = Instance.new("Frame")
+    PlayerList = Instance.new("ScrollingFrame")
+    UIListLayout = Instance.new("UIListLayout")
+
+    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    Frame.Parent = ScreenGui
+    Frame.Size = UDim2.new(0.2, 0, 0.4, 0)
+    Frame.Position = UDim2.new(0, 10, 0, 10)
+    Frame.BackgroundTransparency = 0.5
+    Frame.Active = true
+    Frame.Draggable = true
+
+    -- Add a delete GUI button
+    local DeleteGUIButton = Instance.new("TextButton")
+    DeleteGUIButton.Parent = Frame
+    DeleteGUIButton.Size = UDim2.new(0, 50, 0, 30)
+    DeleteGUIButton.Position = UDim2.new(1, -55, 0, -35)
+    DeleteGUIButton.Text = "Delete"
+    DeleteGUIButton.BackgroundTransparency = 0.5
+
+    DeleteGUIButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+        ScreenGui = nil
+    end)
+
+    PlayerList.Parent = Frame
+    PlayerList.Size = UDim2.new(1, 0, 1, -20)
+    PlayerList.Position = UDim2.new(0, 0, 0, 20)
+    PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    PlayerList.ScrollBarThickness = 10
+
+    UIListLayout.Parent = PlayerList
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            createPlayerButton(player)
+        end
+    end
+
+    game.Players.PlayerAdded:Connect(function(player)
+        createPlayerButton(player)
+    end)
+
+    game.Players.PlayerRemoving:Connect(function(player)
+        for _, button in ipairs(PlayerList:GetChildren()) do
+            if button:IsA("TextButton") and button.Text == player.Name then
+                button:Destroy()
+            end
+        end
+    end)
+end
+
+-- Toggle UI visibility on Insert key press
+local userInputService = game:GetService("UserInputService")
+
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.Insert and not gameProcessed then
+        Frame.Visible = not Frame.Visible
+    end
+end)
+
+createTeleportUI()
+
+local isMobile = UserInputService.TouchEnabled
+
+-- Создаем кнопку для открытия/закрытия меню (только для мобильных устройств)
+local mobileToggleButton
+if isMobile then
+    mobileToggleButton = Instance.new("TextButton")
+    mobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
+    mobileToggleButton.Position = UDim2.new(0, 10, 0.5, -25)
+    mobileToggleButton.BackgroundColor3 = Color3.fromRGB(33, 33, 33)
+    mobileToggleButton.Text = "Menu"
+    mobileToggleButton.TextColor3 = Color3.new(1, 1, 1)
+    mobileToggleButton.TextSize = 14
+    mobileToggleButton.BorderSizePixel = 0
+    mobileToggleButton.Visible = true
+    mobileToggleButton.Parent = screenGui
+
+    -- Добавляем радужный градиент
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 0, 0)), -- Красный
+        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 165, 0)), -- Оранжевый
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)), -- Желтый
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)), -- Зеленый
+        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)), -- Синий
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)), -- Индиго
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(148, 0, 211)) -- Фиолетовый
+    })
+    gradient.Rotation = 90 -- Вертикальный градиент
+    gradient.Parent = mobileToggleButton
+
+    -- Анимация градиента
+    local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true) -- Бесконечная анимация
+    local tween = TweenService:Create(gradient, tweenInfo, { Offset = Vector2.new(1, 0) })
+    tween:Play()
+
+    -- Обработка нажатия на кнопку
+    mobileToggleButton.MouseButton1Click:Connect(function()
+        frame.Visible = not frame.Visible
+    end)
+end
+
+-- Функция для перемещения меню с помощью касаний
+local function makeDraggableWithTouch(frame)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+
+    -- Обработка начала касания
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    -- Обработка перемещения касания
+    UserInputService.TouchMoved:Connect(function(input)
+        if dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Обработка окончания касания
+    UserInputService.TouchEnded:Connect(function(input)
+        dragging = false
+    end)
+end
+
+-- Делаем меню перемещаемым с помощью касаний (если это мобильное устройство)
+if isMobile then
+    makeDraggableWithTouch(frame)
+end
