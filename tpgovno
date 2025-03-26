@@ -5,6 +5,8 @@ local ScreenGui
 local Frame
 local PlayerList
 local UIListLayout
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 -- Function to teleport to a target player
 local function teleportToPlayer(targetPlayer)
@@ -111,9 +113,7 @@ local function createTeleportUI()
 end
 
 -- Toggle UI visibility on Insert key press
-local userInputService = game:GetService("UserInputService")
-
-userInputService.InputBegan:Connect(function(input, gameProcessed)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.Insert and not gameProcessed then
         Frame.Visible = not Frame.Visible
     end
@@ -121,9 +121,14 @@ end)
 
 createTeleportUI()
 
+-- Ensure the script persists after player death
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    createTeleportUI()
+end)
+
 local isMobile = UserInputService.TouchEnabled
 
--- Создаем кнопку для открытия/закрытия меню (только для мобильных устройств)
+-- Create a button for opening/closing the menu (only for mobile devices)
 local mobileToggleButton
 if isMobile then
     mobileToggleButton = Instance.new("TextButton")
@@ -135,40 +140,40 @@ if isMobile then
     mobileToggleButton.TextSize = 14
     mobileToggleButton.BorderSizePixel = 0
     mobileToggleButton.Visible = true
-    mobileToggleButton.Parent = screenGui
+    mobileToggleButton.Parent = ScreenGui
 
-    -- Добавляем радужный градиент
+    -- Add rainbow gradient
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 0, 0)), -- Красный
-        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 165, 0)), -- Оранжевый
-        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)), -- Желтый
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)), -- Зеленый
-        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)), -- Синий
-        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)), -- Индиго
-        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(148, 0, 211)) -- Фиолетовый
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 0, 0)), -- Red
+        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 165, 0)), -- Orange
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)), -- Yellow
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)), -- Green
+        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)), -- Blue
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)), -- Indigo
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(148, 0, 211)) -- Violet
     })
-    gradient.Rotation = 90 -- Вертикальный градиент
+    gradient.Rotation = 90 -- Vertical gradient
     gradient.Parent = mobileToggleButton
 
-    -- Анимация градиента
-    local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true) -- Бесконечная анимация
+    -- Gradient animation
+    local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true) -- Infinite animation
     local tween = TweenService:Create(gradient, tweenInfo, { Offset = Vector2.new(1, 0) })
     tween:Play()
 
-    -- Обработка нажатия на кнопку
+    -- Handle button click
     mobileToggleButton.MouseButton1Click:Connect(function()
-        frame.Visible = not frame.Visible
+        Frame.Visible = not Frame.Visible
     end)
 end
 
--- Функция для перемещения меню с помощью касаний
+-- Function to make the menu draggable with touch
 local function makeDraggableWithTouch(frame)
     local dragging = false
     local dragStart = nil
     local startPos = nil
 
-    -- Обработка начала касания
+    -- Handle touch begin
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
@@ -177,7 +182,7 @@ local function makeDraggableWithTouch(frame)
         end
     end)
 
-    -- Обработка перемещения касания
+    -- Handle touch move
     UserInputService.TouchMoved:Connect(function(input)
         if dragging then
             local delta = input.Position - dragStart
@@ -185,13 +190,13 @@ local function makeDraggableWithTouch(frame)
         end
     end)
 
-    -- Обработка окончания касания
+    -- Handle touch end
     UserInputService.TouchEnded:Connect(function(input)
         dragging = false
     end)
 end
 
--- Делаем меню перемещаемым с помощью касаний (если это мобильное устройство)
+-- Make the menu draggable with touch (if it's a mobile device)
 if isMobile then
-    makeDraggableWithTouch(frame)
+    makeDraggableWithTouch(Frame)
 end
