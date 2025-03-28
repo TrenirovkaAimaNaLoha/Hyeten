@@ -1,203 +1,95 @@
--- This script teleports the player to other players on the server in Roblox.
--- Place this script in a LocalScript inside StarterPlayerScripts or StarterCharacterScripts.
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
 
-local ScreenGui
-local Frame
-local PlayerList
-local UIListLayout
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+gui.ResetOnSpawn = false -- Меню не исчезает после смерти
 
--- Function to teleport to a target player
-local function teleportToPlayer(targetPlayer)
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    local targetCharacter = targetPlayer.Character
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 400)
+frame.Position = UDim2.new(0.5, -125, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.BorderSizePixel = 2
+frame.Parent = gui
+frame.Active = true
+frame.Draggable = true
 
-    if character and targetCharacter then
-        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-        local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+title.Text = "Телепорт к игрокам"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+title.Parent = frame
 
-        if humanoidRootPart and targetHumanoidRootPart then
-            humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame
-        end
-    end
-end
-
--- Function to create a button for a player
-local function createPlayerButton(player)
-    local Button = Instance.new("TextButton")
-    Button.Parent = PlayerList
-    Button.Size = UDim2.new(1, -10, 0, 30)
-    Button.Text = player.Name
-    Button.BackgroundTransparency = 0.5
-
-    -- Teleport to player on button click
-    Button.MouseButton1Click:Connect(function()
-        teleportToPlayer(player)
-    end)
-
-    -- Add delete button
-    local DeleteButton = Instance.new("TextButton")
-    DeleteButton.Parent = Button
-    DeleteButton.Size = UDim2.new(0, 30, 1, 0)
-    DeleteButton.Position = UDim2.new(1, -35, 0, 0)
-    DeleteButton.Text = "X"
-    DeleteButton.BackgroundTransparency = 0.5
-
-    -- Remove player button on delete button click
-    DeleteButton.MouseButton1Click:Connect(function()
-        Button:Destroy()
-    end)
-end
-
--- UI to select a player to teleport to
-local function createTeleportUI()
-    -- Check if the UI already exists
-    if ScreenGui then
-        return
-    end
-
-    ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CustomMenu"
-    Frame = Instance.new("Frame")
-    PlayerList = Instance.new("ScrollingFrame")
-    UIListLayout = Instance.new("UIListLayout")
-
-    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    Frame.Parent = ScreenGui
-    Frame.Size = UDim2.new(0.2, 0, 0.4, 0)
-    Frame.Position = UDim2.new(0, 10, 0, 10)
-    Frame.BackgroundTransparency = 0.5
-    Frame.Active = true
-    Frame.Draggable = true
-
-    -- Add a delete GUI button
-    local DeleteGUIButton = Instance.new("TextButton")
-    DeleteGUIButton.Parent = Frame
-    DeleteGUIButton.Size = UDim2.new(0, 50, 0, 30)
-    DeleteGUIButton.Position = UDim2.new(1, -55, 0, -35)
-    DeleteGUIButton.Text = "Delete"
-    DeleteGUIButton.BackgroundTransparency = 0.5
-
-    DeleteGUIButton.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-        ScreenGui = nil
-    end)
-
-    PlayerList.Parent = Frame
-    PlayerList.Size = UDim2.new(1, 0, 1, -20)
-    PlayerList.Position = UDim2.new(0, 0, 0, 20)
-    PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
-    PlayerList.ScrollBarThickness = 10
-
-    UIListLayout.Parent = PlayerList
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            createPlayerButton(player)
-        end
-    end
-
-    game.Players.PlayerAdded:Connect(function(player)
-        createPlayerButton(player)
-    end)
-
-    game.Players.PlayerRemoving:Connect(function(player)
-        for _, button in ipairs(PlayerList:GetChildren()) do
-            if button:IsA("TextButton") and button.Text == player.Name then
-                button:Destroy()
-            end
-        end
-    end)
-end
-
--- Toggle UI visibility on Insert key press
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.Insert and not gameProcessed then
-        Frame.Visible = not Frame.Visible
-    end
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 30)
+closeButton.Position = UDim2.new(1, -50, 0, 0)
+closeButton.Text = "X"
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 18
+closeButton.Parent = frame
+closeButton.MouseButton1Click:Connect(function()
+    frame.Visible = false
 end)
 
-createTeleportUI()
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, -35)
+scrollFrame.Position = UDim2.new(0, 0, 0, 35)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 8
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 150)
+scrollFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+scrollFrame.HorizontalScrollBarInset = Enum.ScrollBarInset.Always
+scrollFrame.Parent = frame
 
--- Ensure the script persists after player death
-game.Players.LocalPlayer.CharacterAdded:Connect(function()
-    createTeleportUI()
+local listLayout = Instance.new("UIListLayout")
+listLayout.Parent = scrollFrame
+listLayout.Padding = UDim.new(0, 5)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function updatePlayers()
+    for _, button in pairs(scrollFrame:GetChildren()) do
+        if button:IsA("TextButton") then
+            button:Destroy()
+        end
+    end
+    
+    for _, targetPlayer in pairs(Players:GetPlayers()) do
+        if targetPlayer ~= player then
+            local tpButton = Instance.new("TextButton")
+            tpButton.Size = UDim2.new(1, 0, 0, 40)
+            tpButton.Text = targetPlayer.Name
+            tpButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            tpButton.TextColor3 = Color3.new(1, 1, 1)
+            tpButton.Font = Enum.Font.SourceSansBold
+            tpButton.TextSize = 16
+            tpButton.Parent = scrollFrame
+            
+            tpButton.MouseButton1Click:Connect(function()
+                local character = player.Character
+                local targetCharacter = targetPlayer.Character
+                if character and targetCharacter then
+                    local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    if targetHumanoidRootPart and humanoidRootPart then
+                        humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame + Vector3.new(0, 2, 0)
+                    end
+                end
+            end)
+        end
+    end
+    
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+end
+
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
 end)
 
-local isMobile = UserInputService.TouchEnabled
-
--- Create a button for opening/closing the menu (only for mobile devices)
-local mobileToggleButton
-if isMobile then
-    mobileToggleButton = Instance.new("TextButton")
-    mobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
-    mobileToggleButton.Position = UDim2.new(0, 10, 0.5, -25)
-    mobileToggleButton.BackgroundColor3 = Color3.fromRGB(33, 33, 33)
-    mobileToggleButton.Text = "Menu"
-    mobileToggleButton.TextColor3 = Color3.new(1, 1, 1)
-    mobileToggleButton.TextSize = 14
-    mobileToggleButton.BorderSizePixel = 0
-    mobileToggleButton.Visible = true
-    mobileToggleButton.Parent = ScreenGui
-
-    -- Add rainbow gradient
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 0, 0)), -- Red
-        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 165, 0)), -- Orange
-        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)), -- Yellow
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)), -- Green
-        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)), -- Blue
-        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)), -- Indigo
-        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(148, 0, 211)) -- Violet
-    })
-    gradient.Rotation = 90 -- Vertical gradient
-    gradient.Parent = mobileToggleButton
-
-    -- Gradient animation
-    local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true) -- Infinite animation
-    local tween = TweenService:Create(gradient, tweenInfo, { Offset = Vector2.new(1, 0) })
-    tween:Play()
-
-    -- Handle button click
-    mobileToggleButton.MouseButton1Click:Connect(function()
-        Frame.Visible = not Frame.Visible
-    end)
-end
-
--- Function to make the menu draggable with touch
-local function makeDraggableWithTouch(frame)
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-
-    -- Handle touch begin
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-        end
-    end)
-
-    -- Handle touch move
-    UserInputService.TouchMoved:Connect(function(input)
-        if dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    -- Handle touch end
-    UserInputService.TouchEnded:Connect(function(input)
-        dragging = false
-    end)
-end
-
--- Make the menu draggable with touch (if it's a mobile device)
-if isMobile then
-    makeDraggableWithTouch(Frame)
-end
+Players.PlayerAdded:Connect(updatePlayers)
+Players.PlayerRemoving:Connect(updatePlayers)
+updatePlayers()
